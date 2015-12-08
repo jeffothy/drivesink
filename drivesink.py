@@ -22,6 +22,16 @@ class CloudNode(object):
             nodes = DriveSink.instance().request_metadata(
                 "%%snodes/%s/children" % self.node["id"])
             self._children = {n["name"]: CloudNode(n) for n in nodes["data"]}
+            while ("nextToken" in nodes):
+                # 'List children' has limit of 200 so loop with pagination token to get all nodes
+                logging.info("Jnodes is %s", self.node["name"])
+                nodes = DriveSink.instance().request_metadata(
+                    "%%snodes/%s/children?startToken=%s" % (self.node["id"],
+                        nodes["nextToken"])
+                )
+                self._children.update(
+                    {n["name"]: CloudNode(n) for n in nodes["data"]}
+                )
             self._children_fetched = True
         return self._children
 
